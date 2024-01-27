@@ -1,33 +1,24 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
-
 library(shiny)
 
-# Define UI for application that draws a histogram
-fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("distPlot")
-        )
+ui <- fluidPage(
+  titlePanel("Extraction de données"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      fileInput("file", "Sélectionner un fichier Excel")
+    ),
+    
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Sujet", tableOutput("sujet_table")),
+        tabPanel("Anthropometriques", tableOutput("anthropometriques_table")),
+        tabPanel("Performance", tableOutput("performance_table")),
+        tabPanel("Serum Chemistry Blood", tableOutput("serum_chemistry_blood_table")),
+        tabPanel("Whole Blood Analysis", tableOutput("whole_blood_analysis_table")),
+        tabPanel("Hematologie Iron", tableOutput("hematologie_iron_table")),
+        tabPanel("Hormes", tableOutput("hormes_table")),
+        tabPanel("Vitamin", tableOutput("vitamin_table"))
+      )
     )
+  )
 )
