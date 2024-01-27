@@ -146,11 +146,30 @@ vitamin <- rbind(empty_df, vitamin)
 # Définir le chemin du dossier de sortie
 output_dir <- "../Data"  # Assurez-vous que le dossier "Data" existe déjà
 
-# Exporter chaque dataframe
-write.xlsx(anthropometriques, file.path(output_dir, "anthropometriques.xlsx"))
-write.xlsx(performance, file.path(output_dir, "performance.xlsx"))
-write.xlsx(serum_chemistry_blood, file.path(output_dir, "serum_chemistry_blood.xlsx"))
-write.xlsx(whole_blood_analysis, file.path(output_dir, "whole_blood_analysis.xlsx"))
-write.xlsx(hematologie_iron, file.path(output_dir, "hematologie_iron.xlsx"))
-write.xlsx(hormes, file.path(output_dir, "hormes.xlsx"))
-write.xlsx(vitamin, file.path(output_dir, "vitamin.xlsx"))
+# Ajouter la colonne "Sujet" aux dataframes avant l'exportation
+anthropometriques <- cbind(Sujet = rownames(anthropometriques), anthropometriques)
+performance <- cbind(Sujet = rownames(performance), performance)
+serum_chemistry_blood <- cbind(Sujet = rownames(serum_chemistry_blood), serum_chemistry_blood)
+whole_blood_analysis <- cbind(Sujet = rownames(whole_blood_analysis), whole_blood_analysis)
+hematologie_iron <- cbind(Sujet = rownames(hematologie_iron), hematologie_iron)
+hormes <- cbind(Sujet = rownames(hormes), hormes)
+vitamin <- cbind(Sujet = rownames(vitamin), vitamin)
+sujet <- cbind(Sujet = rownames(sujet), sujet)
+
+# Définir le chemin du dossier de sortie
+output_dir <- "../Data"  # Assurez-vous que le dossier "Data" existe déjà
+
+# Exporter chaque dataframe avec la colonne "Sujet"
+write.xlsx(anthropometriques, file.path(output_dir, "anthropometriques.xlsx"), rowNames = FALSE)
+write.xlsx(performance, file.path(output_dir, "performance.xlsx"), rowNames = FALSE)
+write.xlsx(serum_chemistry_blood, file.path(output_dir, "serum_chemistry_blood.xlsx"), rowNames = FALSE)
+write.xlsx(whole_blood_analysis, file.path(output_dir, "whole_blood_analysis.xlsx"), rowNames = FALSE)
+write.xlsx(hematologie_iron, file.path(output_dir, "hematologie_iron.xlsx"), rowNames = FALSE)
+write.xlsx(hormes, file.path(output_dir, "hormes.xlsx"), rowNames = FALSE)
+write.xlsx(vitamin, file.path(output_dir, "vitamin.xlsx"), rowNames = FALSE)
+write.xlsx(sujet, file.path(output_dir, "sujet.xlsx"), rowNames = FALSE)
+
+
+
+
+

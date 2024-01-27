@@ -3,29 +3,39 @@ library(readxl)
 library(lubridate)
 library(tidyr)
 library(openxlsx)
-
-output_dir <- "../Data"
+library(dplyr)
+library(DT) 
 
 server <- function(input, output) {
   
   observeEvent(input$file, {
-    # Vérifie si un fichier a été téléchargé
+    # Check if a file has been uploaded
     if (!is.null(input$file)) {
-      # Enregistrez le fichier dans le répertoire de travail actuel
+      # Save the file to the current working directory
       file_path <- file.path(getwd(), input$file$datapath)
       
-      # Appel du script extract_data.R pour le traitement avec le chemin du fichier comme argument
+      # Call the extract_data.R script for processing with the file path as an argument
       source("extract_data.R", local = TRUE, chdir = TRUE, keep.source = TRUE, echo = TRUE, print.eval = TRUE)
       
-      # Afficher les résultats dans les onglets correspondants
-      output$sujet_table <- renderTable({ sujet }, rownames = TRUE)
-      output$anthropometriques_table <- renderTable({ anthropometriques }, rownames = TRUE)
-      output$performance_table <- renderTable({ performance }, rownames = TRUE)
-      output$serum_chemistry_blood_table <- renderTable({ serum_chemistry_blood }, rownames = TRUE)
-      output$whole_blood_analysis_table <- renderTable({ whole_blood_analysis }, rownames = TRUE)
-      output$hematologie_iron_table <- renderTable({ hematologie_iron }, rownames = TRUE)
-      output$hormes_table <- renderTable({ hormes }, rownames = TRUE)
-      output$vitamin_table <- renderTable({ vitamin }, rownames = TRUE)
+      output$sujet_table <- DT::renderDataTable({
+        sujet_data <- read.xlsx(file.path("../Data", "sujet.xlsx"), sheet = 1)
+        
+        # Essayez de convertir une seule colonne pour tester
+        sujet_data <- sujet_data %>% mutate(across(-Sujet, ~as.Date(., origin = "1899-12-30")))
+        
+        
+        return(sujet_data)
+      }, rownames = TRUE)
+      
+      # Repeat the same for other datasets if they also contain date columns
+      # Replace the everything() with the actual columns if not all are dates
+      output$anthropometriques_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "anthropometriques.xlsx"), sheet = 1)}, rownames = TRUE)
+      output$performance_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "performance.xlsx"), sheet = 1)}, rownames = TRUE)
+      output$serum_chemistry_blood_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "serum_chemistry_blood.xlsx"), sheet = 1)}, rownames = TRUE)
+      output$whole_blood_analysis_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "whole_blood_analysis.xlsx"), sheet = 1)}, rownames = TRUE)
+      output$hematologie_iron_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "hematologie_iron.xlsx"), sheet = 1)}, rownames = TRUE)
+      output$hormes_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "hormes.xlsx"), sheet = 1)}, rownames = TRUE)
+      output$vitamin_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "vitamin.xlsx"), sheet = 1)}, rownames = TRUE)
       
     }
   })

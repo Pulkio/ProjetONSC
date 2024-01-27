@@ -1,4 +1,6 @@
 library(shiny)
+library(DT) 
+
 
 ui <- fluidPage(
   titlePanel("Extraction de données"),
@@ -10,14 +12,14 @@ ui <- fluidPage(
     
     mainPanel(
       tabsetPanel(
-        tabPanel("Sujet", tableOutput("sujet_table")),
-        tabPanel("Anthropometriques", tableOutput("anthropometriques_table")),
-        tabPanel("Performance", tableOutput("performance_table")),
-        tabPanel("Serum Chemistry Blood", tableOutput("serum_chemistry_blood_table")),
-        tabPanel("Whole Blood Analysis", tableOutput("whole_blood_analysis_table")),
-        tabPanel("Hematologie Iron", tableOutput("hematologie_iron_table")),
-        tabPanel("Hormes", tableOutput("hormes_table")),
-        tabPanel("Vitamin", tableOutput("vitamin_table"))
+        tabPanel("Sujet", DT::dataTableOutput("sujet_table")),
+        tabPanel("Anthropometriques", DT::dataTableOutput("anthropometriques_table")),
+        tabPanel("Performance", DT::dataTableOutput("performance_table")),
+        tabPanel("Serum Chemistry Blood", DT::dataTableOutput("serum_chemistry_blood_table")),
+        tabPanel("Whole Blood Analysis", DT::dataTableOutput("whole_blood_analysis_table")),
+        tabPanel("Hematologie Iron", DT::dataTableOutput("hematologie_iron_table")),
+        tabPanel("Hormes", DT::dataTableOutput("hormes_table")),
+        tabPanel("Vitamin", DT::dataTableOutput("vitamin_table"))
       )
     )
   )
