@@ -2,6 +2,7 @@ library(readxl)
 library(lubridate)
 library(tidyr)
 library(openxlsx)
+library(stringr)
 
 # Chemin du fichier
 #file_path <- "../Data/Données_Suivi_Bio_Etudiant.xlsx" # Assurez-vous de mettre à jour le chemin
