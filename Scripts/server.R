@@ -12,6 +12,7 @@ server <- function(input, output) {
     # Check if a file has been uploaded
     if (!is.null(input$file)) {
       # Save the file to the current working directory
+    
       file_path <- file.path(getwd(), input$file$datapath)
       
       # Call the extract_data.R script for processing with the file path as an argument
@@ -36,6 +37,17 @@ server <- function(input, output) {
       output$hematologie_iron_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "hematologie_iron.xlsx"), sheet = 1)}, rownames = TRUE)
       output$hormes_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "hormes.xlsx"), sheet = 1)}, rownames = TRUE)
       output$vitamin_table <- DT::renderDataTable({read.xlsx(file.path("../Data", "vitamin.xlsx"), sheet = 1)}, rownames = TRUE)
+      
+      
+      #Exemple de comment accéder aux données
+      
+      # Lire le fichier Excel sans spécifier 'rownames = TRUE' car ce n'est pas une option valide pour read.xlsx
+      test <- read.xlsx(file.path("../Data", "anthropometriques.xlsx"), sheet = 1)
+      # Supposons que la première colonne de votre fichier Excel doit devenir les noms de lignes du dataframe en R
+      rownames(test) <- test[, 1]  # Définir la première colonne comme noms de lignes
+      # Ensuite, vous pouvez supprimer cette première colonne du dataframe si nécessaire
+      test <- test[, -1]  # Supprime la première colon
+      print(head(test))
       
     }
   })
