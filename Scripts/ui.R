@@ -1,26 +1,31 @@
 library(shiny)
-library(DT) 
+library(readxl)
+library(dplyr)
+library(DT)
 
+file_names <- c("anthropometriques", "hematologie_iron", "hormes", 
+                "performance", "serum_chemistry_blood", "sujet", "vitamin", "whole_blood_analysis")
 
 ui <- fluidPage(
-  titlePanel("Extraction de données"),
+  titlePanel("Extraction de données des joueurs"),
   
   sidebarLayout(
     sidebarPanel(
-      fileInput("file", "Sélectionner un fichier Excel")
+      fileInput("file", "Sélectionner un fichier Excel"),
+      selectInput('selected_player', 'Choisir un joueur', choices = NULL)
     ),
     
     mainPanel(
-      tabsetPanel(
-        tabPanel("Sujet", DT::dataTableOutput("sujet_table")),
-        tabPanel("Anthropometriques", DT::dataTableOutput("anthropometriques_table")),
-        tabPanel("Performance", DT::dataTableOutput("performance_table")),
-        tabPanel("Serum Chemistry Blood", DT::dataTableOutput("serum_chemistry_blood_table")),
-        tabPanel("Whole Blood Analysis", DT::dataTableOutput("whole_blood_analysis_table")),
-        tabPanel("Hematologie Iron", DT::dataTableOutput("hematologie_iron_table")),
-        tabPanel("Hormes", DT::dataTableOutput("hormes_table")),
-        tabPanel("Vitamin", DT::dataTableOutput("vitamin_table"))
+      # Use tabsetPanel to create tabs
+      tabsetPanel(id = "tabs",
+                  # Create the tab panels using a for loop
+                  do.call(tabsetPanel, lapply(file_names, function(name) {
+                    tabPanel(title = name, dataTableOutput(outputId = paste0("table_", name)))
+                  }))
       )
     )
   )
 )
+
+
+
