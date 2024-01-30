@@ -16,16 +16,13 @@ ui <- fluidPage(
     ),
     
     mainPanel(
-      # Use tabsetPanel to create tabs
-      tabsetPanel(id = "tabs",
-                  # Create the tab panels using a for loop
-                  do.call(tabsetPanel, lapply(file_names, function(name) {
-                    tabPanel(title = name, dataTableOutput(outputId = paste0("table_", name)))
-                  }))
-      )
+      uiOutput("player_tabs") # This will render the tabs for each player test
     )
   )
 )
+
+
+
 
 
 
