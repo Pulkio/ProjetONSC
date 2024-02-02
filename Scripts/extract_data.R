@@ -3,6 +3,7 @@ library(lubridate)
 library(tidyr)
 library(openxlsx)
 library(stringr)
+library(dplyr)
 
 # Chemin du fichier
 #file_path <- "../Data/Données_Suivi_Bio_Etudiant.xlsx" # Assurez-vous de mettre à jour le chemin
@@ -62,115 +63,63 @@ sujet <- cbind(Donnees = NA, Unites = NA, sujet)
 sujet[1, "Donnees"] <- "Date_prelev"
 sujet[1, "Unites"] <- "date"
 
+
 # 2. Dataframe Anthropometriques
 anthropometriques <- read_excel(file_path, range = cell_rows(4:6), col_names = FALSE)
-
 # 3. Dataframe Performance
 performance <- read_excel(file_path, range = cell_rows(8:11), col_names = FALSE)
-
 # 4. Dataframe Serum Chemistry Blood
 serum_chemistry_blood <- read_excel(file_path, range = cell_rows(14:29), col_names = FALSE)
-
 # 5. Dataframe Whole Blood Analysis
 whole_blood_analysis <- read_excel(file_path, range = cell_rows(31:43), col_names = FALSE)
-
 # 6. Dataframe Hematologie Iron
 hematologie_iron <- read_excel(file_path, range = cell_rows(45:48), col_names = FALSE)
-
 # 7. Dataframe Hormes
 hormes <- read_excel(file_path, range = cell_rows(50:52), col_names = FALSE)
-
 # 8. Dataframe Vitamin
 vitamin <- read_excel(file_path, range = cell_rows(54:60), col_names = FALSE)
 
 
-# Supprimer la deuxième colonne
-anthropometriques <- as.data.frame(anthropometriques[, -2])
-performance <- as.data.frame(performance[, -2])
-serum_chemistry_blood <- as.data.frame(serum_chemistry_blood[, -2])
-whole_blood_analysis <- as.data.frame(whole_blood_analysis[, -2])
-hematologie_iron <- as.data.frame(hematologie_iron[, -2])
-hormes <- as.data.frame(hormes[, -2])
-vitamin <- as.data.frame(vitamin[, -2])
-
-# Utiliser la première colonne comme label pour chaque ligne
-rownames(sujet) <- sujet[, 1]
-rownames(anthropometriques) <- anthropometriques[, 1]
-rownames(performance) <- performance[, 1]
-rownames(serum_chemistry_blood) <- serum_chemistry_blood[, 1]
-rownames(whole_blood_analysis) <- whole_blood_analysis[, 1]
-rownames(hematologie_iron) <- hematologie_iron[, 1]
-rownames(hormes) <- hormes[, 1]
-rownames(vitamin) <- vitamin[, 1]
-
-# Supprimer la première colonne après avoir utilisé ses valeurs comme labels
-sujet <- sujet[, -1]
-sujet <- sujet[, -1]
-anthropometriques <- anthropometriques[, -1]
-performance <- performance[, -1]
-serum_chemistry_blood <- serum_chemistry_blood[, -1]
-whole_blood_analysis <- whole_blood_analysis[, -1]
-hematologie_iron <- hematologie_iron[, -1]
-hormes <- hormes[, -1]
-vitamin <- vitamin[, -1]
-
-# Appliquer la fonction pour obtenir les nouveaux noms de colonnes
-
-nombre_de_colonnes_manquantes <- ncol(anthropometriques) - ncol(sujet)
-nouveaux_noms <- renommer_colonnes(noms_originaux)
-nouveaux_noms <- nouveaux_noms[-1]
-# Renommer les colonnes dans chaque dataframe
-names(anthropometriques) <- nouveaux_noms
-names(performance) <- nouveaux_noms
-names(serum_chemistry_blood) <- nouveaux_noms
-names(whole_blood_analysis) <- nouveaux_noms
-names(hematologie_iron) <- nouveaux_noms
-names(hormes) <- nouveaux_noms
-names(vitamin) <- nouveaux_noms
-
-# Créer un dataframe vide avec la même structure que les autres dataframes
-empty_df <- data.frame(matrix(NA, ncol = ncol(sujet), nrow = 0))
-
 # Renommer les colonnes de l'empty_df
-names(empty_df) <- colnames(sujet)
+names(anthropometriques) <- colnames(sujet)
+names(performance) <- colnames(sujet)
+names(serum_chemistry_blood) <- colnames(sujet)
+names(whole_blood_analysis) <- colnames(sujet)
+names(hematologie_iron) <- colnames(sujet)
+names(hormes) <- colnames(sujet)
+names(vitamin) <- colnames(sujet)
 
-# Fusionner les dataframes en ajoutant les colonnes de "sujet" au début
-anthropometriques <- rbind(empty_df, anthropometriques)
-performance <- rbind(empty_df, performance)
-serum_chemistry_blood <- rbind(empty_df, serum_chemistry_blood)
-whole_blood_analysis <- rbind(empty_df, whole_blood_analysis)
-hematologie_iron <- rbind(empty_df, hematologie_iron)
-hormes <- rbind(empty_df, hormes)
-vitamin <- rbind(empty_df, vitamin)
+# Convertissez les colonnes de type date en chaînes de caractères pour `sujet`
+sujet <- sujet %>%
+  mutate(across(where(is.Date), as.character))
 
+# Convertissez les colonnes numériques en chaînes de caractères pour les autres dataframes
+anthropometriques <- anthropometriques %>%
+  mutate(across(where(is.numeric), as.character))
 
-# Définir le chemin du dossier de sortie
-output_dir <- "../Data"  # Assurez-vous que le dossier "Data" existe déjà
+performance <- performance %>%
+  mutate(across(where(is.numeric), as.character))
 
-# Ajouter la colonne "Sujet" aux dataframes avant l'exportation
-anthropometriques <- cbind(Sujet = rownames(anthropometriques), anthropometriques)
-performance <- cbind(Sujet = rownames(performance), performance)
-serum_chemistry_blood <- cbind(Sujet = rownames(serum_chemistry_blood), serum_chemistry_blood)
-whole_blood_analysis <- cbind(Sujet = rownames(whole_blood_analysis), whole_blood_analysis)
-hematologie_iron <- cbind(Sujet = rownames(hematologie_iron), hematologie_iron)
-hormes <- cbind(Sujet = rownames(hormes), hormes)
-vitamin <- cbind(Sujet = rownames(vitamin), vitamin)
-sujet <- cbind(Sujet = rownames(sujet), sujet)
+serum_chemistry_blood <- serum_chemistry_blood %>%
+  mutate(across(where(is.numeric), as.character))
+
+whole_blood_analysis <- whole_blood_analysis %>%
+  mutate(across(where(is.numeric), as.character))
+
+hematologie_iron <- hematologie_iron %>%
+  mutate(across(where(is.numeric), as.character))
+
+hormes <- hormes %>%
+  mutate(across(where(is.numeric), as.character))
+
+vitamin <- vitamin %>%
+  mutate(across(where(is.numeric), as.character))
+
+# Maintenant, combinez tous les dataframes en un seul
+donnee_sante_combined <- rbind(sujet, anthropometriques, performance, serum_chemistry_blood, whole_blood_analysis, hematologie_iron, hormes, vitamin)
 
 # Définir le chemin du dossier de sortie
 output_dir <- "../Data"  # Assurez-vous que le dossier "Data" existe déjà
 
 # Exporter chaque dataframe avec la colonne "Sujet"
-write.xlsx(anthropometriques, file.path(output_dir, "anthropometriques.xlsx"), rowNames = FALSE)
-write.xlsx(performance, file.path(output_dir, "performance.xlsx"), rowNames = FALSE)
-write.xlsx(serum_chemistry_blood, file.path(output_dir, "serum_chemistry_blood.xlsx"), rowNames = FALSE)
-write.xlsx(whole_blood_analysis, file.path(output_dir, "whole_blood_analysis.xlsx"), rowNames = FALSE)
-write.xlsx(hematologie_iron, file.path(output_dir, "hematologie_iron.xlsx"), rowNames = FALSE)
-write.xlsx(hormes, file.path(output_dir, "hormes.xlsx"), rowNames = FALSE)
-write.xlsx(vitamin, file.path(output_dir, "vitamin.xlsx"), rowNames = FALSE)
-write.xlsx(sujet, file.path(output_dir, "sujet.xlsx"), rowNames = FALSE)
-
-
-
-
-
+write.xlsx(donnee_sante_combined, file.path(output_dir, "donnee_sante_combined.xlsx"), rowNames = FALSE)
