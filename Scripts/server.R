@@ -72,19 +72,8 @@ process_data <- function(file_path) {
   hormes <- convertir_colonnes(hormes)
   vitamin <- convertir_colonnes(vitamin)
   
-  # Combinaison de tous les dataframes en un seul
-  donnee_sante_combined <- rbind(sujet, anthropometriques, performance, serum_chemistry_blood, whole_blood_analysis, hematologie_iron, hormes, vitamin)
   
-  # Spécifiez les noms de lignes que vous souhaitez conserver
-  noms_de_lignes_a_garder <- c("Donnees", "Date_prelev", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D")
-  
-  
-  
-  
-  
-  
-  
-  
+
   # Maintenant, combinez tous les dataframes en un seul
   donnee_sante_combined <- rbind(sujet, anthropometriques, performance, serum_chemistry_blood, whole_blood_analysis, hematologie_iron, hormes, vitamin)
   
@@ -118,7 +107,7 @@ process_data <- function(file_path) {
   
   
   # Spécifiez les noms de lignes que vous souhaitez conserver
-  noms_de_lignes_a_garder <- c("Donnees", "Date_prelev", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
+  noms_de_lignes_a_garder <- c("Donnees", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
   
   donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
 

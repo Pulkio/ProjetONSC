@@ -159,7 +159,10 @@ donnee_sante_combined <- rbind(donnee_sante_combined, ratio_testo_corti = ratio_
 
 
 # Spécifiez les noms de lignes que vous souhaitez conserver
-noms_de_lignes_a_garder <- c("Donnees", "Date_prelev", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
+noms_de_lignes_a_garder <- c("Donnees", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
+
+normes_2 <- read_excel("../Data/normes_valeurs.xlsx") # Assurez-vous de mettre à jour le chemin
+
 
 donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
 
