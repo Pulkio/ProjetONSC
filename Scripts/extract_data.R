@@ -6,8 +6,8 @@ library(stringr)
 library(dplyr)
 
 # Chemin du fichier
-#file_path <- "../Data/Données_Suivi_Bio_Etudiant.xlsx" # Assurez-vous de mettre à jour le chemin
-file_path <- input$file$datapath  # Récupère le chemin du fichier spécifié par l'utilisateur
+file_path <- "../Data/Données_Suivi_Bio_Etudiant.xlsx" # Assurez-vous de mettre à jour le chemin
+#file_path <- input$file$datapath  # Récupère le chemin du fichier spécifié par l'utilisateur
 
 # Lecture du fichier Excel
 # Notez qu'on suppose que les données commencent dans la première feuille et la première colonne
@@ -115,11 +115,53 @@ hormes <- hormes %>%
 vitamin <- vitamin %>%
   mutate(across(where(is.numeric), as.character))
 
+
+
+
+
+
+
+
+
+
+
+
 # Maintenant, combinez tous les dataframes en un seul
 donnee_sante_combined <- rbind(sujet, anthropometriques, performance, serum_chemistry_blood, whole_blood_analysis, hematologie_iron, hormes, vitamin)
 
-# Définir le chemin du dossier de sortie
-output_dir <- "../Data"  # Assurez-vous que le dossier "Data" existe déjà
+# Suppression de la colonne "Unites"
+donnee_sante_combined <- subset(donnee_sante_combined, select = -Unites)
 
-# Exporter chaque dataframe avec la colonne "Sujet"
-write.xlsx(donnee_sante_combined, file.path(output_dir, "donnee_sante_combined.xlsx"), rowNames = FALSE)
+rownames(donnee_sante_combined) <- donnee_sante_combined[, 1]
+
+# Ensuite, supprimer la première colonne du dataframe car elle est maintenant utilisée comme noms de lignes
+donnee_sante_combined <- donnee_sante_combined[, -1]
+
+
+donnee_sante_combined <- donnee_sante_combined[-which(rownames(donnee_sante_combined) %in% c('IL-6', 'C Reactive Protein')), ]
+
+# Convertir la première ligne (les dates) en format Date
+donnee_sante_combined[1, ] <- lapply(donnee_sante_combined[1, ], as.Date, format="%Y-%m-%d")
+
+# Save les noms de lignes
+row.names <- rownames(donnee_sante_combined)
+# Convertir toutes les autres lignes en numérique
+donnee_sante_combined <- as.data.frame(lapply(donnee_sante_combined, function(x) as.numeric(x)))
+
+# Reappliquer les noms de lignes
+rownames(donnee_sante_combined) <- row.names
+
+# Calculer le ratio
+ratio_testo_corti <- donnee_sante_combined["Testosterone", ] / donnee_sante_combined["Cortisol", ]
+
+# Ajouter le ratio comme une nouvelle ligne au dataframe
+donnee_sante_combined <- rbind(donnee_sante_combined, ratio_testo_corti = ratio_testo_corti)
+
+
+# Spécifiez les noms de lignes que vous souhaitez conserver
+noms_de_lignes_a_garder <- c("Donnees", "Date_prelev", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
+
+donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
+
+
+

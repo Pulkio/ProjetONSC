@@ -75,6 +75,53 @@ process_data <- function(file_path) {
   # Combinaison de tous les dataframes en un seul
   donnee_sante_combined <- rbind(sujet, anthropometriques, performance, serum_chemistry_blood, whole_blood_analysis, hematologie_iron, hormes, vitamin)
   
+  # Spécifiez les noms de lignes que vous souhaitez conserver
+  noms_de_lignes_a_garder <- c("Donnees", "Date_prelev", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D")
+  
+  
+  
+  
+  
+  
+  
+  
+  # Maintenant, combinez tous les dataframes en un seul
+  donnee_sante_combined <- rbind(sujet, anthropometriques, performance, serum_chemistry_blood, whole_blood_analysis, hematologie_iron, hormes, vitamin)
+  
+  # Suppression de la colonne "Unites"
+  donnee_sante_combined <- subset(donnee_sante_combined, select = -Unites)
+  
+  rownames(donnee_sante_combined) <- donnee_sante_combined[, 1]
+  
+  # Ensuite, supprimer la première colonne du dataframe car elle est maintenant utilisée comme noms de lignes
+  donnee_sante_combined <- donnee_sante_combined[, -1]
+  
+  
+  donnee_sante_combined <- donnee_sante_combined[-which(rownames(donnee_sante_combined) %in% c('IL-6', 'C Reactive Protein')), ]
+  
+  # Convertir la première ligne (les dates) en format Date
+  donnee_sante_combined[1, ] <- lapply(donnee_sante_combined[1, ], as.Date, format="%Y-%m-%d")
+  
+  # Save les noms de lignes
+  row.names <- rownames(donnee_sante_combined)
+  # Convertir toutes les autres lignes en numérique
+  donnee_sante_combined <- as.data.frame(lapply(donnee_sante_combined, function(x) as.numeric(x)))
+  
+  # Reappliquer les noms de lignes
+  rownames(donnee_sante_combined) <- row.names
+  
+  # Calculer le ratio
+  ratio_testo_corti <- donnee_sante_combined["Testosterone", ] / donnee_sante_combined["Cortisol", ]
+  
+  # Ajouter le ratio comme une nouvelle ligne au dataframe
+  donnee_sante_combined <- rbind(donnee_sante_combined, ratio_testo_corti = ratio_testo_corti)
+  
+  
+  # Spécifiez les noms de lignes que vous souhaitez conserver
+  noms_de_lignes_a_garder <- c("Donnees", "Date_prelev", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
+  
+  donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
+
   return(donnee_sante_combined)
 }
 
@@ -92,7 +139,7 @@ server <- function(input, output, session) {
     donnee_sante_combined(process_data(input$file$datapath))
     
     # Extraire les identifiants uniques des joueurs
-    player_identifiers <- unique(gsub("\\d+", "", colnames(donnee_sante_combined()[-c(1, 2)])))
+    player_identifiers <- unique(gsub("\\d+", "", colnames(donnee_sante_combined())))
     
     # Mettre à jour la liste des joueurs uniques dans l'UI
     updateSelectInput(session, 'selected_player', choices = player_identifiers)
@@ -119,7 +166,7 @@ server <- function(input, output, session) {
     # Afficher les tables de données pour chaque colonne du joueur
     lapply(player_cols, function(col_name) {
       output[[paste0("table_", col_name)]] <- renderDataTable({
-        datatable(donnee_sante_combined()[, c(1, which(colnames(donnee_sante_combined()) == col_name)), drop = FALSE],
+        datatable(donnee_sante_combined()[c(which(colnames(donnee_sante_combined()) == col_name))],
                   options = list(pageLength = 5, searching = FALSE, lengthChange = FALSE), 
                   rownames = TRUE)
       })
