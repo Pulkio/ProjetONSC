@@ -5,6 +5,7 @@ library(lubridate)
 library(dplyr)
 library(openxlsx)
 library(stringr)
+library(DT)
 
 # Fonction pour renommer les colonnes basée sur les occurrences des noms
 renommer_colonnes <- function(noms) {
@@ -27,6 +28,7 @@ convertir_colonnes <- function(df) {
            across(where(is.numeric), as.character))
   return(df)
 }
+
 
 # Fonction pour traiter les données extraites d'un fichier Excel
 process_data <- function(file_path) {
@@ -114,7 +116,6 @@ process_data <- function(file_path) {
   normes <- read_excel("../Data/normes_valeurs.xlsx") # Assurez-vous de mettre à jour le chemin
   donnee_sante_combined <- cbind(normes[,-1], donnee_sante_combined)
   
-
   return(donnee_sante_combined)
 }
 
@@ -162,9 +163,22 @@ server <- function(input, output, session) {
     lapply(player_cols, function(col_name) {
       output[[paste0("table_", col_name)]] <- renderDataTable({
         datatable(donnee_sante_combined()[c(which(colnames(donnee_sante_combined()) == col_name),1,2)],
-                  options = list(pageLength = 16, searching = FALSE, lengthChange = FALSE), 
+                  options = list(pageLength = 16, searching = FALSE, lengthChange = FALSE,
+                                 rowCallback = JS(
+                                   "function(row, data, index) {",
+                                   "var normeInf = parseFloat(data[2]);",  # Supposons que la norme inférieure est en 2ème colonne
+                                   "var normeSup = parseFloat(data[3]);",  # Supposons que la norme supérieure est en 3ème colonne
+                                   "var value = parseFloat(data[1]);",  # Supposons que la valeur est en 1ère colonne
+                                   "if (value >= normeInf && value <= normeSup) {",
+                                   "$('td', row).css('color', 'green');",
+                                   "} else {",
+                                   "$('td', row).css('color', 'red');",
+                                   "}",
+                                   "}"
+                                 )), 
                   rownames = TRUE)
       })
     })
+    
   })
 }
