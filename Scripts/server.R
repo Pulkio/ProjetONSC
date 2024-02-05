@@ -102,7 +102,7 @@ process_data <- function(file_path) {
   rownames(donnee_sante_combined) <- row.names
   
   # Calculer le ratio
-  ratio_testo_corti <- donnee_sante_combined["Testosterone", ] / donnee_sante_combined["Cortisol", ]
+  ratio_testo_corti <- round(donnee_sante_combined["Testosterone", ] / donnee_sante_combined["Cortisol", ], 2)
   
   # Ajouter le ratio comme une nouvelle ligne au dataframe
   donnee_sante_combined <- rbind(donnee_sante_combined, ratio_testo_corti = ratio_testo_corti)
@@ -166,9 +166,9 @@ server <- function(input, output, session) {
                   options = list(pageLength = 16, searching = FALSE, lengthChange = FALSE,
                                  rowCallback = JS(
                                    "function(row, data, index) {",
-                                   "var normeInf = parseFloat(data[2]);",  # Supposons que la norme inférieure est en 2ème colonne
-                                   "var normeSup = parseFloat(data[3]);",  # Supposons que la norme supérieure est en 3ème colonne
-                                   "var value = parseFloat(data[1]);",  # Supposons que la valeur est en 1ère colonne
+                                   "var normeInf = parseFloat(data[2]);",  #la norme inférieure est en 2ème colonne
+                                   "var normeSup = parseFloat(data[3]);",  #la norme supérieure est en 3ème colonne
+                                   "var value = parseFloat(data[1]);",  # la valeur est en 1ère colonne
                                    "if (value >= normeInf && value <= normeSup) {",
                                    "$('td', row).css('color', 'green');",
                                    "} else {",
