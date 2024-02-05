@@ -6,6 +6,8 @@ library(dplyr)
 library(openxlsx)
 library(stringr)
 library(DT)
+library(tibble)
+library(tidyr)
 
 # Fonction pour renommer les colonnes basée sur les occurrences des noms
 renommer_colonnes <- function(noms) {
@@ -140,6 +142,78 @@ server <- function(input, output, session) {
     # Mettre à jour la liste des joueurs uniques dans l'UI
     updateSelectInput(session, 'selected_player', choices = player_identifiers)
   })
+  
+  
+  
+  
+  
+  
+  
+  
+  # Dans la partie serveur de votre application Shiny
+  observeEvent(input$show_graphs, {
+    # Obtenir les noms des lignes du dataframe
+    row_names <- rownames(donnee_sante_combined())
+    
+    showModal(modalDialog(
+      title = "Graphique pour le joueur sélectionné",
+      # Créer une liste déroulante avec les noms des lignes
+      selectInput("selected_variable", "Choisir une variable :", choices = row_names),
+      actionButton("show_plot", "Afficher le graphique"), # Bouton pour générer le graphique
+      plotlyOutput("plot"), # Output pour le graphique Plotly
+      size = "l" # Taille du modal
+    ))
+  })
+  
+  observeEvent(input$show_plot, {
+    # Assurez-vous que le joueur est sélectionné
+    req(input$selected_player)
+    
+    # Filtrez les données pour n'inclure que les mesures pour le joueur sélectionné
+    data_long <- reactive({
+      selected_player <- input$selected_player # Le joueur sélectionné, par exemple "A"
+      
+      # Sélectionnez uniquement les colonnes pour ce joueur
+      cols_for_player <- grep(paste0("^", selected_player, "\\d+$"), names(donnee_sante_combined()), value = TRUE)
+      
+      # Transposez et transformez les données pour ce joueur spécifique
+      data <- donnee_sante_combined()[, cols_for_player] %>%
+        t() %>%
+        as.data.frame() %>%
+        tibble::rownames_to_column("Temps") %>%
+        tidyr::pivot_longer(-Temps, names_to = "Variable", values_to = "Valeur") %>%
+        dplyr::filter(Variable == input$selected_variable)
+      
+      return(data)
+    })
+    
+    # Créez le graphique Plotly
+    output$plot <- renderPlotly({
+      req(data_long())
+      plot_ly(data = data_long(), x = ~Temps, y = ~Valeur, type = 'scatter', mode = 'lines+markers') %>%
+        layout(title = paste("Évolution de", input$selected_variable, "pour le joueur", input$selected_player, "à travers le temps"),
+               xaxis = list(title = "Temps"),
+               yaxis = list(title = "Valeur"))
+    })
+  })
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   # Observer la sélection d'un joueur
   observeEvent(input$selected_player, {
