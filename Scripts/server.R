@@ -110,6 +110,10 @@ process_data <- function(file_path) {
   noms_de_lignes_a_garder <- c("Donnees", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
   
   donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
+  
+  normes <- read_excel("../Data/normes_valeurs.xlsx") # Assurez-vous de mettre à jour le chemin
+  donnee_sante_combined <- cbind(normes[,-1], donnee_sante_combined)
+  
 
   return(donnee_sante_combined)
 }
@@ -128,7 +132,9 @@ server <- function(input, output, session) {
     donnee_sante_combined(process_data(input$file$datapath))
     
     # Extraire les identifiants uniques des joueurs
-    player_identifiers <- unique(gsub("\\d+", "", colnames(donnee_sante_combined())))
+    player_identifiers <- unique(gsub("\\d+", "", colnames(donnee_sante_combined()[-(1:2)])))
+    
+    print(player_identifiers)
     
     # Mettre à jour la liste des joueurs uniques dans l'UI
     updateSelectInput(session, 'selected_player', choices = player_identifiers)
@@ -155,8 +161,8 @@ server <- function(input, output, session) {
     # Afficher les tables de données pour chaque colonne du joueur
     lapply(player_cols, function(col_name) {
       output[[paste0("table_", col_name)]] <- renderDataTable({
-        datatable(donnee_sante_combined()[c(which(colnames(donnee_sante_combined()) == col_name))],
-                  options = list(pageLength = 5, searching = FALSE, lengthChange = FALSE), 
+        datatable(donnee_sante_combined()[c(which(colnames(donnee_sante_combined()) == col_name),1,2)],
+                  options = list(pageLength = 16, searching = FALSE, lengthChange = FALSE), 
                   rownames = TRUE)
       })
     })

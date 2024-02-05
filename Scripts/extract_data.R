@@ -166,5 +166,5 @@ normes_2 <- read_excel("../Data/normes_valeurs.xlsx") # Assurez-vous de mettre Ã
 
 donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
 
-
+donnee_sante_combined <- cbind(normes_2[,-1], donnee_sante_combined)
 
