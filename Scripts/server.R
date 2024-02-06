@@ -49,6 +49,13 @@ process_data <- function(file_path) {
   sujet[1, "Donnees"] <- "Date_prelev"
   sujet[1, "Unites"] <- "date"
   
+  #Creation dataframe nom et dates
+  donnees_sujets_date <- read_excel(file_path, range = cell_rows(1:2))
+  donnees_sujets_date <- donnees_sujets_date[,-c(1,2)]
+  nouveaux_noms_sans_premier <- nouveaux_noms[-1]
+  colnames(donnees_sujets_date) <- nouveaux_noms_sans_premier
+  print(donnees_sujets_date)
+  
   # Lecture et traitement des autres feuilles
   anthropometriques <- read_excel(file_path, range = cell_rows(4:6), col_names = FALSE)
   performance <- read_excel(file_path, range = cell_rows(8:11), col_names = FALSE)
@@ -111,14 +118,14 @@ process_data <- function(file_path) {
   
   
   # Spécifiez les noms de lignes que vous souhaitez conserver
-  noms_de_lignes_a_garder <- c("Donnees", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
+  noms_de_lignes_a_garder <- c("Donnees", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "Vitamin B12")
   
   donnee_sante_combined <- donnee_sante_combined[rownames(donnee_sante_combined) %in% noms_de_lignes_a_garder, ]
   
   normes <- read_excel("../Data/normes_valeurs.xlsx") # Assurez-vous de mettre à jour le chemin
   donnee_sante_combined <- cbind(normes[,-1], donnee_sante_combined)
   
-  return(donnee_sante_combined)
+  return(list(donnee_sante_combined = donnee_sante_combined, donnees_sujets_date = donnees_sujets_date ))
 }
 
 
@@ -126,13 +133,18 @@ process_data <- function(file_path) {
 server <- function(input, output, session) {
   # Valeur réactive pour stocker le dataframe combiné des données de santé
   donnee_sante_combined <- reactiveVal()
+  donnees_sujets_date_reactive <- reactiveVal()
   
   # Observer l'événement de chargement d'un fichier
   observeEvent(input$file, {
     req(input$file)
     
-    # Traitement des données à partir du fichier spécifié par l'utilisateur
-    donnee_sante_combined(process_data(input$file$datapath))
+    # Traitement des données
+    data_processed <- process_data(input$file$datapath)
+    
+    # Mise à jour des valeurs réactives
+    donnee_sante_combined(data_processed$donnee_sante_combined)
+    donnees_sujets_date_reactive(data_processed$donnees_sujets_date)
     
     # Extraire les identifiants uniques des joueurs
     player_identifiers <- unique(gsub("\\d+", "", colnames(donnee_sante_combined()[-(1:2)])))
@@ -165,6 +177,7 @@ server <- function(input, output, session) {
     ))
   })
   
+
   observeEvent(input$show_plot, {
     # Assurez-vous que le joueur est sélectionné
     req(input$selected_player)
@@ -222,6 +235,36 @@ server <- function(input, output, session) {
     # Trouver les colonnes qui correspondent au joueur sélectionné
     player_cols <- grep(paste0("^", input$selected_player, "\\d+$"), colnames(donnee_sante_combined()), value = TRUE)
     
+    
+    # Mise à jour du tableau de dates
+    output$tableau_dates <- renderDataTable({
+      # Assurez-vous que donnees_sujets_date_reactive n'est pas NULL
+      # if (is.null(donnees_sujets_date_reactive())) {
+      #   return(dataTableOutput()) # Retourne un tableau vide si NULL
+      # }
+      
+      # Récupérez le dataframe des dates et formatez-le
+      
+      # Récupérez le dataframe des dates et formatez-le
+      donnees_sujets_date <- donnees_sujets_date_reactive() %>%
+        select(matches(player_cols)) %>%  # Sélectionnez uniquement les colonnes pour le joueur sélectionné
+        mutate(across(everything(), ~format(as.POSIXct(.x), "%d-%m-%Y")))
+      
+      print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA") 
+      str(donnees_sujets_date)
+      
+      
+      datatable(donnees_sujets_date, options = list(
+        paging = FALSE,
+        searching = FALSE,
+        info = FALSE,
+        lengthChange = FALSE
+      ), rownames = FALSE)
+    })
+    
+    
+    
+    
     # Générer l'UI pour les onglets du joueur sélectionné
     output$player_tabs <- renderUI({
       myTabs <- lapply(player_cols, function(col_name) {
@@ -237,7 +280,7 @@ server <- function(input, output, session) {
     lapply(player_cols, function(col_name) {
       output[[paste0("table_", col_name)]] <- renderDataTable({
         datatable(donnee_sante_combined()[c(which(colnames(donnee_sante_combined()) == col_name),1,2)],
-                  options = list(pageLength = 16, searching = FALSE, lengthChange = FALSE,
+                  options = list(pageLength = 16, searching = FALSE, lengthChange = FALSE,paging = FALSE,
                                  rowCallback = JS(
                                    "function(row, data, index) {",
                                    "var normeInf = parseFloat(data[2]);",  #la norme inférieure est en 2ème colonne

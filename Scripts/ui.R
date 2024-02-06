@@ -19,15 +19,22 @@ ui <- fluidPage(
     sidebarPanel(
       fileInput("file", "Sélectionner un fichier Excel"),
       selectInput('selected_player', 'Choisir un joueur', choices = NULL),
-      actionButton("show_graphs", "Graphique") # Bouton pour afficher le modal de graphiques
+      actionButton("show_graphs", "Graphique"), # Bouton pour afficher le modal de graphiques
+      # Utiliser fluidRow et column pour organiser les tableaux
+      fluidRow(
+        div(
+          dataTableOutput("tableau_dates"),
+          style = "overflow-x: scroll;" # Pour gérer les débordements horizontaux si nécessaire
+        )
+      )
     ),
-    
     mainPanel(
       uiOutput("player_tabs"),
-      uiOutput("graph_ui")
+      uiOutput("graph_ui") # Supposons que c'est la "zone grise"
     )
   )
 )
+
 
 
 
