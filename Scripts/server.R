@@ -165,7 +165,7 @@ server <- function(input, output, session) {
   # Dans la partie serveur de votre application Shiny
   observeEvent(input$show_graphs, {
     # Obtenir les noms des lignes du dataframe
-    row_names <- rownames(donnee_sante_combined())
+    row_names <- setdiff(rownames(donnee_sante_combined()), c("Age"))
     
     showModal(modalDialog(
       title = "Graphique pour le joueur sélectionné",
@@ -179,14 +179,14 @@ server <- function(input, output, session) {
   
 
   observeEvent(input$show_plot, {
-    # Assurez-vous que le joueur est sélectionné
-    req(input$selected_player)
+    req(input$selected_player, input$selected_variable)
     
     # Filtrez les données pour n'inclure que les mesures pour le joueur sélectionné
     data_long <- reactive({
-      selected_player <- input$selected_player # Le joueur sélectionné, par exemple "A"
+      selected_player <- input$selected_player
+      selected_variable <- input$selected_variable
       
-      # Sélectionnez uniquement les colonnes pour ce joueur
+      # Sélectionnez uniquement les colonnes pour le joueur sélectionné
       cols_for_player <- grep(paste0("^", selected_player, "\\d+$"), names(donnee_sante_combined()), value = TRUE)
       
       # Transposez et transformez les données pour ce joueur spécifique
@@ -195,7 +195,7 @@ server <- function(input, output, session) {
         as.data.frame() %>%
         tibble::rownames_to_column("Temps") %>%
         tidyr::pivot_longer(-Temps, names_to = "Variable", values_to = "Valeur") %>%
-        dplyr::filter(Variable == input$selected_variable)
+        dplyr::filter(Variable == selected_variable)
       
       return(data)
     })
@@ -203,12 +203,33 @@ server <- function(input, output, session) {
     # Créez le graphique Plotly
     output$plot <- renderPlotly({
       req(data_long())
-      plot_ly(data = data_long(), x = ~Temps, y = ~Valeur, type = 'scatter', mode = 'lines+markers') %>%
+      
+      hover_text <- paste("Temps: ", data_long()$Temps, "<br>Valeur: ", data_long()$Valeur)
+      
+      # Récupérez les valeurs normales pour la variable sélectionnée
+      norme_inf <- donnee_sante_combined()[input$selected_variable, "Norme_inf"]
+      norme_sup <- donnee_sante_combined()[input$selected_variable, "Norme_supp"]
+      
+      # Tracez les points avec les noms personnalisés dans la légende
+      plot <- plot_ly(data = data_long(), x = ~Temps, y = ~Valeur, type = 'scatter', mode = 'lines+markers+text',
+                      text = ~Valeur, hoverinfo = 'text', textposition = 'top center', name = 'Joueur') %>%
         layout(title = paste("Évolution de", input$selected_variable, "pour le joueur", input$selected_player, "à travers le temps"),
                xaxis = list(title = "Temps"),
                yaxis = list(title = "Valeur"))
+      
+      # Ajoutez des lignes en pointillés pour les normes avec les noms personnalisés dans la légende
+      if (!is.null(norme_inf) && !is.null(norme_sup)) {
+        plot <- plot %>%
+          add_trace(y = ~rep(norme_inf, length(data_long()$Temps)), mode = 'lines', line = list(dash = 'dot', color = 'blue'), name = 'norme_inf') %>%
+          add_trace(y = ~rep(norme_sup, length(data_long()$Temps)), mode = 'lines', line = list(dash = 'dot', color = 'red'), name = 'norme_sup')
+      }
+      
+      return(plot)
     })
+    
+    
   })
+  
   
   
   
