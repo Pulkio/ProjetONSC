@@ -133,6 +133,7 @@ process_data <- function(file_path) {
   performance <- as.data.frame(sapply(performance, as.numeric))
   rownames(performance) <- row_names
   performance$Moyenne_tous_joueurs <- rowMeans(performance)
+  performance$Moyenne_tous_joueurs <- round(rowMeans(performance), 2)
   
   performance <- performance %>%
     rownames_to_column(var = "rowN")
