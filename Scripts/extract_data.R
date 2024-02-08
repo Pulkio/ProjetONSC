@@ -189,6 +189,11 @@ ratio_testo_corti <- donnee_sante_combined["Testosterone", ] / donnee_sante_comb
 donnee_sante_combined <- rbind(donnee_sante_combined, ratio_testo_corti = ratio_testo_corti)
 
 
+performance <- column_to_rownames(performance, var = "Donnees")
+performance <- performance[,-1]
+performance <- as.data.frame(sapply(performance, as.numeric))
+performance$Moyenne_tous_joueurs <- rowMeans(performance)
+
 # Spécifiez les noms de lignes que vous souhaitez conserver
 # noms_de_lignes_a_garder <- c("Donnees", "Age", "Poids", "Masse grasse", "Lactate Dehydrogenase", "Creatine Kinase", "Myoglobin", "Neutrophils", "Lymphocytes", "Monocytes", "Basophil", "Hemoglobin", "Hematocrit", "Ferritin", "Testosterone", "1,25-dihydroxyvitamine D", "ratio_testo_corti")
 # 

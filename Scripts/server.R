@@ -54,8 +54,7 @@ process_data <- function(file_path) {
   donnees_sujets_date <- donnees_sujets_date[,-c(1,2)]
   nouveaux_noms_sans_premier <- nouveaux_noms[-1]
   colnames(donnees_sujets_date) <- nouveaux_noms_sans_premier
-  print(donnees_sujets_date)
-  
+
   # Lecture et traitement des autres feuilles
   anthropometriques <- read_excel(file_path, range = cell_rows(4:6), col_names = FALSE)
   performance <- read_excel(file_path, range = cell_rows(8:11), col_names = FALSE)
@@ -125,7 +124,21 @@ process_data <- function(file_path) {
   normes <- read_excel("../Data/normes_valeurs.xlsx") # Assurez-vous de mettre à jour le chemin
   donnee_sante_combined <- cbind(normes[,-1], donnee_sante_combined)
   
-  return(list(donnee_sante_combined = donnee_sante_combined, donnees_sujets_date = donnees_sujets_date ))
+  
+  
+  performance <- column_to_rownames(performance, var = "Donnees")
+  
+  performance <- performance[,-1]
+  row_names <- rownames(performance)
+  performance <- as.data.frame(sapply(performance, as.numeric))
+  rownames(performance) <- row_names
+  performance$Moyenne_tous_joueurs <- rowMeans(performance)
+  
+  performance <- performance %>%
+    rownames_to_column(var = "rowN")
+  
+
+  return(list(donnee_sante_combined = donnee_sante_combined, donnees_sujets_date = donnees_sujets_date, performance = performance ))
 }
 
 
@@ -134,6 +147,8 @@ server <- function(input, output, session) {
   # Valeur réactive pour stocker le dataframe combiné des données de santé
   donnee_sante_combined <- reactiveVal()
   donnees_sujets_date_reactive <- reactiveVal()
+  performance_reactive <- reactiveVal()
+  
   
   # Observer l'événement de chargement d'un fichier
   observeEvent(input$file, {
@@ -145,11 +160,12 @@ server <- function(input, output, session) {
     # Mise à jour des valeurs réactives
     donnee_sante_combined(data_processed$donnee_sante_combined)
     donnees_sujets_date_reactive(data_processed$donnees_sujets_date)
+    performance_reactive(data_processed$performance)
+    
     
     # Extraire les identifiants uniques des joueurs
     player_identifiers <- unique(gsub("\\d+", "", colnames(donnee_sante_combined()[-(1:2)])))
     
-    print(player_identifiers)
     
     # Mettre à jour la liste des joueurs uniques dans l'UI
     updateSelectInput(session, 'selected_player', choices = player_identifiers)
@@ -177,7 +193,7 @@ server <- function(input, output, session) {
     ))
   })
   
-
+  
   observeEvent(input$show_plot, {
     req(input$selected_player, input$selected_variable)
     
@@ -259,19 +275,12 @@ server <- function(input, output, session) {
     
     # Mise à jour du tableau de dates
     output$tableau_dates <- renderDataTable({
-      # Assurez-vous que donnees_sujets_date_reactive n'est pas NULL
-      # if (is.null(donnees_sujets_date_reactive())) {
-      #   return(dataTableOutput()) # Retourne un tableau vide si NULL
-      # }
-      
-      # Récupérez le dataframe des dates et formatez-le
       
       # Récupérez le dataframe des dates et formatez-le
       donnees_sujets_date <- donnees_sujets_date_reactive() %>%
         select(matches(player_cols)) %>%  # Sélectionnez uniquement les colonnes pour le joueur sélectionné
         mutate(across(everything(), ~format(as.POSIXct(.x), "%d-%m-%Y")))
       
-      print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA") 
       str(donnees_sujets_date)
       
       
@@ -282,6 +291,34 @@ server <- function(input, output, session) {
         lengthChange = FALSE
       ), rownames = FALSE)
     })
+    
+    
+    
+    output$performances_data <- renderDataTable({
+      
+      
+      
+      
+      # Récupérez le dataframe des dates et formatez-le
+      performances_data <- performance_reactive() %>%
+        select(rowN, matches(player_cols), Moyenne_tous_joueurs) |> rename(Test = rowN)
+      
+
+      str(performances_data)
+      
+      
+      
+      
+      datatable(performances_data, options = list(
+        paging = FALSE,
+        searching = FALSE,
+        info = FALSE,
+        lengthChange = FALSE
+      ), rownames = FALSE)
+    })
+    
+    
+    
     
     
     
